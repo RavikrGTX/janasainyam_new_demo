@@ -1,13 +1,10 @@
 import { Suspense } from "react";
-import { getPdfEditionsFromWordPress, getPublishedPosts } from "@/lib/wordpress";
+import { getPdfEditionsFromWordPress } from "@/lib/wordpress";
 import HomePageClient from "@/components/home/HomePageClient";
 
 async function NewspaperHomeContent() {
-  // Fetch real PDF editions (ordered newest first) and published posts from WordPress REST API
-  const [editions, { posts }] = await Promise.all([
-    getPdfEditionsFromWordPress(12),
-    getPublishedPosts({ perPage: 6 }),
-  ]);
+  // Fetch real PDF editions (ordered newest first) from WordPress REST API
+  const editions = await getPdfEditionsFromWordPress(12);
 
   const latestEdition = editions.length > 0 ? editions[0] : null;
   const archiveEditions = editions.length > 1 ? editions.slice(1) : [];
@@ -16,7 +13,6 @@ async function NewspaperHomeContent() {
     <HomePageClient
       edition={latestEdition}
       archiveEditions={archiveEditions}
-      posts={posts}
     />
   );
 }

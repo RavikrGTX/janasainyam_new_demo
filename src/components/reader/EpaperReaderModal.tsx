@@ -14,7 +14,6 @@ import {
   FileText,
   Check,
   Scissors,
-  Hand,
 } from "lucide-react";
 import ClippingModal from "./ClippingModal";
 
@@ -82,6 +81,11 @@ export default function EpaperReaderModal({
     scrollLeft: 0,
     scrollTop: 0,
   });
+
+  // Touch handlers for mobile pinch-to-zoom and double-tap
+  const pinchStartDistRef = useRef<number | null>(null);
+  const pinchStartScaleRef = useRef<number>(1.25);
+  const lastTapTimeRef = useRef<number>(0);
 
   const currentRenderTaskRef = useRef<PdfRenderTask | null>(null);
 
@@ -336,6 +340,75 @@ export default function EpaperReaderModal({
     setClipCurrent(null);
   };
 
+  // Touch clipping handlers for mobile touchscreens
+  const handleClipTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (toolMode !== "clip" || !canvasRef.current || e.touches.length === 0) return;
+    const touch = e.touches[0];
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(touch.clientX - rect.left, rect.width));
+    const y = Math.max(0, Math.min(touch.clientY - rect.top, rect.height));
+
+    setIsDraggingClip(true);
+    setClipStart({ x, y });
+    setClipCurrent({ x, y });
+  };
+
+  const handleClipTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isDraggingClip || toolMode !== "clip" || !canvasRef.current || e.touches.length === 0) return;
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+    const touch = e.touches[0];
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(touch.clientX - rect.left, rect.width));
+    const y = Math.max(0, Math.min(touch.clientY - rect.top, rect.height));
+    setClipCurrent({ x, y });
+  };
+
+  const handleClipTouchEnd = () => {
+    handleClipMouseUp();
+  };
+
+  // Touch handlers for Pinch-to-Zoom and Double-Tap on Mobile Viewport
+  const handleViewportTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (toolMode === "clip") return; // Let clipping handle touches in clip mode
+
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      pinchStartDistRef.current = dist;
+      pinchStartScaleRef.current = scale;
+    } else if (e.touches.length === 1) {
+      const now = Date.now();
+      if (now - lastTapTimeRef.current < 320) {
+        // Double tap: toggle zoom between fit width and 2.2x
+        setScale((prev) => (prev > 1.6 ? 1.0 : 2.2));
+        lastTapTimeRef.current = 0;
+      } else {
+        lastTapTimeRef.current = now;
+      }
+    }
+  };
+
+  const handleViewportTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (toolMode === "clip") return;
+    if (e.touches.length === 2 && pinchStartDistRef.current !== null) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const ratio = dist / pinchStartDistRef.current;
+      const target = Math.min(Math.max(pinchStartScaleRef.current * ratio, 0.6), 3.5);
+      setScale(parseFloat(target.toFixed(2)));
+    }
+  };
+
+  const handleViewportTouchEnd = () => {
+    pinchStartDistRef.current = null;
+  };
+
   const generateClippingImage = (
     cssX: number,
     cssY: number,
@@ -455,20 +528,20 @@ export default function EpaperReaderModal({
       className="fixed inset-0 z-50 bg-slate-950 flex flex-col h-screen w-screen overflow-hidden text-white select-none"
     >
       {/* 1. Reader Master Top Toolbar */}
-      <div className="bg-[#0f2b5c] border-b border-[#1b3d7d] px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2 shrink-0 shadow-md z-30">
+      <div className="bg-[#0f2b5c] border-b border-[#1b3d7d] px-2.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 shrink-0 shadow-md z-30">
         {/* Left: Close & Title */}
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             onClick={onClose}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded text-xs sm:text-sm font-medium transition cursor-pointer"
+            className="flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/20 text-white rounded text-xs sm:text-sm font-medium transition cursor-pointer shrink-0"
             title="హోమ్‌కి తిరిగి వెళ్ళండి (Back to Home)"
           >
             <X className="w-4 h-4" />
             <span className="hidden sm:inline font-telugu">మూసివేయి</span>
           </button>
 
-          <div className="border-l border-white/20 pl-3 min-w-0">
-            <h2 className="text-xs sm:text-sm font-bold font-telugu truncate">
+          <div className="border-l border-white/20 pl-2 sm:pl-3 min-w-0">
+            <h2 className="text-xs sm:text-sm font-bold font-telugu truncate max-w-[120px] sm:max-w-xs md:max-w-md">
               {editionTitle}
             </h2>
             {editionSubtitle && (
@@ -479,8 +552,8 @@ export default function EpaperReaderModal({
           </div>
         </div>
 
-        {/* Center: Page Navigation Controls */}
-        <div className="flex items-center gap-1 sm:gap-2">
+        {/* Center: Desktop Page Navigation Controls (Hidden on mobile, mobile uses bottom dock) */}
+        <div className="hidden md:flex items-center gap-1 sm:gap-2">
           <button
             onClick={goToPrevPage}
             disabled={currentPage <= 1}
@@ -516,39 +589,23 @@ export default function EpaperReaderModal({
           </button>
         </div>
 
-        {/* Right: Tools (Scissors/Clipping, Hand, Zoom, Download, Share) */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          {/* Tool Mode Toggles: Hand/Pan vs Scissors/Clip */}
-          <div className="flex items-center bg-black/30 p-0.5 rounded border border-white/10">
-            <button
-              onClick={() => setToolMode("pan")}
-              className={`p-1.5 sm:px-2.5 sm:py-1 rounded flex items-center gap-1 text-xs transition cursor-pointer ${
-                toolMode === "pan"
-                  ? "bg-blue-600 text-white font-bold"
-                  : "text-slate-300 hover:text-white"
-              }`}
-              title="చదవడానికి స్క్రోల్ చేయండి (Scroll / Pan tool)"
-            >
-              <Hand className="w-3.5 h-3.5" />
-              <span className="hidden xl:inline font-telugu">స్క్రోల్</span>
-            </button>
+        {/* Right: Tools (Crop Icon Only, Zoom, Download, Share) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* CROP TOOL TOGGLE BUTTON - ICON ONLY (no text) */}
+          <button
+            onClick={() => setToolMode(toolMode === "clip" ? "pan" : "clip")}
+            className={`p-2 sm:px-2.5 sm:py-1.5 rounded flex items-center justify-center transition cursor-pointer ${
+              toolMode === "clip"
+                ? "bg-[#c9182b] text-white ring-2 ring-yellow-400 shadow-md animate-pulse"
+                : "bg-white/10 hover:bg-white/20 text-yellow-300 hover:text-yellow-200"
+            }`}
+            title="వార్తను కత్తిరించండి (Crop / Clip Tool)"
+            aria-label="Crop Tool"
+          >
+            <Scissors className="w-4 h-4" />
+          </button>
 
-            {/* SCISSORS / CLIPPING BUTTON */}
-            <button
-              onClick={() => setToolMode("clip")}
-              className={`p-1.5 sm:px-2.5 sm:py-1 rounded flex items-center gap-1 text-xs transition cursor-pointer ${
-                toolMode === "clip"
-                  ? "bg-[#c9182b] text-white font-bold animate-pulse"
-                  : "text-slate-300 hover:text-white"
-              }`}
-              title="వార్త భాగాన్ని కత్తిరించండి (Scissors / Clipping tool)"
-            >
-              <Scissors className="w-3.5 h-3.5 text-yellow-300" />
-              <span className="font-telugu font-bold">కత్తిరింపు (Clip)</span>
-            </button>
-          </div>
-
-          {/* Zoom Controls */}
+          {/* Desktop Zoom Controls */}
           <div className="hidden lg:flex items-center gap-1 bg-black/30 p-0.5 rounded">
             <button
               onClick={zoomOut}
@@ -583,10 +640,10 @@ export default function EpaperReaderModal({
             </button>
           </div>
 
-          {/* Thumbnails Sidebar Toggle */}
+          {/* Thumbnails Sidebar Toggle (Desktop) */}
           <button
             onClick={() => setShowThumbnails(!showThumbnails)}
-            className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded text-xs font-medium flex items-center gap-1 transition cursor-pointer ${
+            className={`hidden md:flex p-1.5 sm:px-2.5 sm:py-1.5 rounded text-xs font-medium items-center gap-1 transition cursor-pointer ${
               showThumbnails ? "bg-blue-600 text-white" : "bg-white/10 hover:bg-white/20 text-white"
             }`}
             title="పేజీల సూచిక (Thumbnails)"
@@ -601,7 +658,7 @@ export default function EpaperReaderModal({
             target="_blank"
             rel="noopener noreferrer"
             download="janasainyam-epaper.pdf"
-            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-medium flex items-center gap-1 transition cursor-pointer"
+            className="p-2 sm:px-2.5 sm:py-1.5 rounded bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-medium flex items-center justify-center gap-1 transition cursor-pointer"
             title="పూర్తి ఈ-పేపర్ పిడిఎఫ్ డౌన్‌లోడ్ చేయండి"
           >
             <Download className="w-4 h-4" />
@@ -611,7 +668,7 @@ export default function EpaperReaderModal({
           {/* Share */}
           <button
             onClick={handleShare}
-            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded bg-white/10 hover:bg-white/20 text-white text-xs font-medium flex items-center gap-1 transition cursor-pointer"
+            className="p-2 sm:px-2.5 sm:py-1.5 rounded bg-white/10 hover:bg-white/20 text-white text-xs font-medium flex items-center justify-center gap-1 transition cursor-pointer"
             title="షేర్ చేయండి"
           >
             {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
@@ -620,7 +677,7 @@ export default function EpaperReaderModal({
             </span>
           </button>
 
-          {/* Full Screen */}
+          {/* Full Screen (Desktop) */}
           <button
             onClick={toggleFullScreen}
             className="p-1.5 hover:bg-white/20 rounded transition cursor-pointer hidden sm:block"
@@ -633,17 +690,16 @@ export default function EpaperReaderModal({
 
       {/* Scissors Mode Interactive Help Banner */}
       {toolMode === "clip" && (
-        <div className="bg-[#c9182b] text-white py-1.5 px-4 text-xs font-telugu flex items-center justify-between shadow-md shrink-0 animate-in slide-in-from-top duration-200">
-          <div className="flex items-center gap-2">
-            <Scissors className="w-4 h-4 text-yellow-300" />
-            <span className="font-bold">కత్తిరింపు మోడ్ (Clipping Mode Active):</span>
-            <span>పేజీపై కావలసిన వార్త లేదా ప్రకటన భాగాన్ని మౌస్‌తో లేదా వేలితో బాక్స్‌లా డ్రాగ్ చేయండి.</span>
+        <div className="bg-[#c9182b] text-white py-1.5 px-3 text-xs font-telugu flex items-center justify-between shadow-md shrink-0 animate-in slide-in-from-top duration-200">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Scissors className="w-4 h-4 text-yellow-300 shrink-0" />
+            <span className="truncate">బాక్స్‌లా డ్రాగ్ చేసి కత్తిరించండి</span>
           </div>
           <button
             onClick={() => setToolMode("pan")}
-            className="px-2.5 py-0.5 bg-black/30 hover:bg-black/50 text-white rounded text-xs transition cursor-pointer font-bold"
+            className="px-2.5 py-0.5 bg-black/40 hover:bg-black/60 text-white rounded text-xs transition cursor-pointer font-bold shrink-0 ml-2"
           >
-            రద్దు (Cancel)
+            రద్దు
           </button>
         </div>
       )}
@@ -702,6 +758,9 @@ export default function EpaperReaderModal({
           onMouseDown={handleMouseDownPan}
           onMouseMove={handleMouseMovePan}
           onMouseUp={handleMouseUpPan}
+          onTouchStart={handleViewportTouchStart}
+          onTouchMove={handleViewportTouchMove}
+          onTouchEnd={handleViewportTouchEnd}
           className={`flex-1 overflow-auto bg-slate-900 p-2 sm:p-8 flex flex-col items-center justify-start overscroll-contain transition-colors ${
             toolMode === "pan"
               ? isPanning
@@ -742,6 +801,9 @@ export default function EpaperReaderModal({
               onMouseDown={handleClipMouseDown}
               onMouseMove={handleClipMouseMove}
               onMouseUp={handleClipMouseUp}
+              onTouchStart={handleClipTouchStart}
+              onTouchMove={handleClipTouchMove}
+              onTouchEnd={handleClipTouchEnd}
             >
               {/* PDF Canvas */}
               <canvas ref={canvasRef} className="block max-w-none pointer-events-auto" />
@@ -749,7 +811,7 @@ export default function EpaperReaderModal({
               {/* Scissors Drag Overlay Box */}
               {toolMode === "clip" && clipBoxStyle && (
                 <div
-                  className="absolute border-2 border-dashed border-[#c9182b] bg-[#c9182b]/20 pointer-events-none shadow-sm flex items-start justify-end p-1"
+                  className="absolute border-2 border-dashed border-[#c9182b] bg-[#c9182b]/20 pointer-events-none shadow-sm flex items-start justify-end p-1 z-10"
                   style={clipBoxStyle}
                 >
                   <span className="bg-[#c9182b] text-white text-[10px] px-1.5 py-0.5 rounded font-mono font-bold leading-none">
@@ -762,51 +824,79 @@ export default function EpaperReaderModal({
         </div>
       </div>
 
-      {/* 3. Mobile Touch Reading & Quick Navigation Bar */}
-      <div className="sm:hidden bg-[#0a1c3d] border-t border-[#1b3d7d] px-3 py-2 flex items-center justify-between text-xs z-30">
-        <button
-          onClick={goToPrevPage}
-          disabled={currentPage <= 1}
-          className="flex items-center gap-1 px-2.5 py-1.5 bg-white/10 rounded disabled:opacity-30 font-telugu"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>మునుపటి</span>
-        </button>
-
-        <div className="flex items-center gap-2">
-          {/* Quick Fit Width on Mobile */}
+      {/* 3. Mobile Touch Reading & Quick Navigation Bar (md:hidden) */}
+      <div className="md:hidden bg-[#0f2b5c] border-t border-[#1b3d7d] px-3 py-2 flex items-center justify-between text-xs z-30 shrink-0 shadow-lg">
+        {/* Page Nav */}
+        <div className="flex items-center gap-1">
           <button
-            onClick={fitToWidth}
-            className="px-2 py-1 bg-white/10 rounded font-telugu text-[11px]"
-            title="వెడల్పుకు సరిపోల్చు"
+            onClick={goToPrevPage}
+            disabled={currentPage <= 1}
+            className="p-2 bg-white/10 active:bg-white/20 rounded disabled:opacity-25 transition cursor-pointer"
+            title="మునుపటి పేజీ"
           >
-            ఫిట్
+            <ChevronLeft className="w-4 h-4" />
           </button>
 
-          {/* Quick Scissors on Mobile */}
-          <button
-            onClick={() => setToolMode(toolMode === "clip" ? "pan" : "clip")}
-            className={`px-2 py-1 rounded font-telugu text-[11px] flex items-center gap-1 ${
-              toolMode === "clip" ? "bg-[#c9182b] text-white font-bold" : "bg-white/10 text-slate-200"
-            }`}
-          >
-            <Scissors className="w-3.5 h-3.5 text-yellow-300" />
-            <span>కత్తిరింపు</span>
-          </button>
-
-          <span className="font-telugu font-medium text-blue-200 text-xs">
+          <span className="font-telugu font-bold text-blue-100 text-xs px-2">
             {currentPage} / {numPages || 1}
           </span>
+
+          <button
+            onClick={goToNextPage}
+            disabled={currentPage >= numPages}
+            className="p-2 bg-white/10 active:bg-white/20 rounded disabled:opacity-25 transition cursor-pointer"
+            title="తరువాతి పేజీ"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
 
-        <button
-          onClick={goToNextPage}
-          disabled={currentPage >= numPages}
-          className="flex items-center gap-1 px-2.5 py-1.5 bg-white/10 rounded disabled:opacity-30 font-telugu"
-        >
-          <span>తరువాతి</span>
-          <ChevronRight className="w-4 h-4" />
-        </button>
+        {/* Zoom Controls & Crop Tool Toggle (ICON ONLY) */}
+        <div className="flex items-center gap-1.5">
+          {/* Zoom Out */}
+          <button
+            onClick={zoomOut}
+            className="p-2 bg-white/10 active:bg-white/20 rounded transition cursor-pointer"
+            title="జూమ్ తగ్గించు (Zoom Out)"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+
+          {/* Fit Width */}
+          <button
+            onClick={fitToWidth}
+            className="px-2.5 py-1.5 bg-white/10 active:bg-white/20 rounded font-telugu text-[11px] font-semibold transition cursor-pointer"
+            title="వెడల్పుకు సరిపోల్చు (Fit Width)"
+          >
+            Fit
+          </button>
+
+          {/* Zoom In */}
+          <button
+            onClick={zoomIn}
+            className="p-2 bg-white/10 active:bg-white/20 rounded transition cursor-pointer"
+            title="జూమ్ పెంచు (Zoom In)"
+          >
+            <ZoomIn className="w-4 h-4" />
+          </button>
+
+          {/* Divider */}
+          <span className="w-px h-5 bg-white/20 mx-0.5" />
+
+          {/* Crop Tool Toggle - ICON ONLY! No text! */}
+          <button
+            onClick={() => setToolMode(toolMode === "clip" ? "pan" : "clip")}
+            className={`p-2 rounded transition cursor-pointer flex items-center justify-center ${
+              toolMode === "clip"
+                ? "bg-[#c9182b] text-white ring-2 ring-yellow-400 shadow-md animate-pulse"
+                : "bg-white/10 active:bg-white/20 text-yellow-300"
+            }`}
+            title="కత్తిరించండి (Crop / Clip)"
+            aria-label="Crop Tool"
+          >
+            <Scissors className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* 4. Clipping Preview, Share & Download Modal */}

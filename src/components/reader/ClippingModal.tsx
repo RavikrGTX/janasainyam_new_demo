@@ -160,36 +160,52 @@ export default function ClippingModal({
         </div>
 
         {/* Share & Download Actions */}
-        <div className="bg-slate-50 border-t border-slate-200 p-4 sm:p-5 space-y-3">
-          <div className="text-xs font-telugu text-slate-500 text-center font-medium">
-            ఈ వార్తా క్లిప్పింగ్‌ను సోషల్ మీడియాలో షేర్ చేయండి లేదా డౌన్‌లోడ్ చేసుకోండి
+        <div className="bg-slate-50 border-t border-slate-200 p-3 sm:p-5 space-y-3">
+          {/* Primary Quick Share Bar */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            {/* WhatsApp Share - Most used */}
+            <button
+              onClick={handleWhatsAppShare}
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-[#25D366] hover:bg-[#20ba59] active:bg-[#1da850] text-white rounded-md font-telugu text-sm font-bold shadow-sm transition cursor-pointer"
+            >
+              <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.81 13.47 3.81 11.91C3.81 7.37 7.5 3.67 12.05 3.67Z" />
+              </svg>
+              <span>వాట్సాప్‌లో షేర్ చేయండి (WhatsApp)</span>
+            </button>
+
+            {/* Native Device Share (Shares the cropped picture) */}
+            <button
+              onClick={handleNativeShare}
+              disabled={sharing}
+              className="flex items-center justify-center gap-1.5 py-3 px-4 bg-[#0f2b5c] hover:bg-[#193661] text-white rounded-md font-telugu text-sm font-semibold shadow-sm transition cursor-pointer"
+            >
+              <Share2 className="w-4 h-4 shrink-0" />
+              <span>షేర్ (Share)</span>
+            </button>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            {/* Download Button */}
+          {/* Secondary Actions */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
             <button
               onClick={handleDownload}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#0f2b5c] hover:bg-[#193661] text-white rounded font-telugu text-xs font-semibold shadow-xs transition cursor-pointer"
+              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded font-telugu text-xs font-semibold shadow-2xs transition cursor-pointer"
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-4 h-4 text-slate-600" />
               <span>డౌన్‌లోడ్</span>
             </button>
 
-            {/* WhatsApp Share Button */}
             <button
-              onClick={handleWhatsAppShare}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#25D366] hover:bg-[#20ba59] text-white rounded font-telugu text-xs font-semibold shadow-xs transition cursor-pointer"
+              onClick={handleCopyImage}
+              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded font-telugu text-xs font-semibold shadow-2xs transition cursor-pointer"
             >
-              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.81 13.47 3.81 11.91C3.81 7.37 7.5 3.67 12.05 3.67Z" />
-              </svg>
-              <span>వాట్సాప్</span>
+              {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-600" />}
+              <span>{copiedLink ? "కాపీ అయింది!" : "కాపీ (Copy)"}</span>
             </button>
 
-            {/* Facebook Share Button */}
             <button
               onClick={handleFacebookShare}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#1877F2] hover:bg-[#1464cc] text-white rounded font-telugu text-xs font-semibold shadow-xs transition cursor-pointer"
+              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-white hover:bg-slate-100 text-[#1877F2] border border-slate-300 rounded font-telugu text-xs font-semibold shadow-2xs transition cursor-pointer"
             >
               <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -197,46 +213,18 @@ export default function ClippingModal({
               <span>ఫేస్‌బుక్</span>
             </button>
 
-            {/* X / Twitter Share Button */}
             <button
               onClick={handleTwitterShare}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-black hover:bg-slate-800 text-white rounded font-telugu text-xs font-semibold shadow-xs transition cursor-pointer"
+              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-white hover:bg-slate-100 text-slate-900 border border-slate-300 rounded font-telugu text-xs font-semibold shadow-2xs transition cursor-pointer"
             >
               <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
               <span>ట్విట్టర్ (X)</span>
             </button>
-
-            {/* Native Share (Instagram, Telegram, Twitter, etc.) */}
-            <button
-              onClick={handleNativeShare}
-              disabled={sharing}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-700 hover:bg-slate-600 text-white rounded font-telugu text-xs font-semibold shadow-xs transition cursor-pointer"
-            >
-              <Share2 className="w-4 h-4" />
-              <span>మరిన్ని ప్లాట్‌ఫామ్‌లు</span>
-            </button>
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-slate-200 text-xs">
-            <button
-              onClick={handleCopyImage}
-              className="inline-flex items-center gap-1 text-slate-600 hover:text-slate-900 transition font-telugu cursor-pointer"
-            >
-              {copiedLink ? (
-                <>
-                  <Check className="w-4 h-4 text-emerald-600" />
-                  <span className="text-emerald-700 font-semibold">క్లిప్పింగ్ కాపీ అయింది!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4 text-slate-500" />
-                  <span>చిత్రం కాపీ చేయండి (Copy)</span>
-                </>
-              )}
-            </button>
-
+          <div className="flex items-center justify-end pt-2 border-t border-slate-200 text-xs">
             <button
               onClick={onClose}
               className="text-slate-500 hover:text-slate-800 transition font-telugu cursor-pointer"

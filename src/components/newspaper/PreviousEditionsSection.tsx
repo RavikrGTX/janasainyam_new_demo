@@ -28,7 +28,7 @@ export default function PreviousEditionsSection({
           <div className="flex items-center gap-2.5">
             <Archive className="w-5 h-5 text-[#0f2b5c]" />
             <h2 className="text-xl sm:text-2xl font-bold font-telugu text-[#0f2b5c]">
-              గత సంచికల భాండాగారం (Newspaper Archives)
+              గత సంచికలు
             </h2>
           </div>
 
@@ -134,7 +134,7 @@ export default function PreviousEditionsSection({
               గత సంచికలు లేవు
             </h4>
             <p className="font-telugu text-xs text-slate-500 leading-relaxed">
-              WordPress CMS లో ఒకటికి మించి పిడిఎఫ్ ఫైళ్లు అప్‌లోడ్ చేసినప్పుడు మునుపటి సంచికలు ఆర్కైవ్‌గా ఇక్కడ కనిపిస్తాయి.
+              ఒకటికి మించి సంచికలు అందుబాటులో ఉన్నప్పుడు మునుపటి సంచికలు ఆర్కైవ్‌గా ఇక్కడ కనిపిస్తాయి.
             </p>
           </div>
         )}

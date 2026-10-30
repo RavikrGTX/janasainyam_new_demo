@@ -5,7 +5,6 @@ import {
   BookOpen,
   Download,
   Share2,
-  FileCheck2,
   Eye,
   CheckCircle,
 } from "lucide-react";
@@ -71,11 +70,11 @@ export default function TodayEditionHero({
               ప్రస్తుతం ఈ-పేపర్ పిడిఎఫ్ ఏదీ అప్‌లోడ్ కాలేదు
             </h3>
             <p className="font-telugu text-sm text-slate-600 leading-relaxed mb-4">
-              WordPress మీడియా లైబ్రరీలో ఉన్న పాత పిడిఎఫ్ తొలగించబడింది. మీరు WordPress అడ్మిన్ ప్యానెల్‌లో (<code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-slate-800">Media &gt; Add New Media File</code>) సరికొత్త వార్తాపత్రిక పిడిఎఫ్‌ను అప్‌లోడ్ చేసిన వెంటనే, ఆ తాజా సంచిక ఆటోమేటిక్‌గా ఇక్కడ ప్రధాన ఈ-పేపర్‌గా కనిపిస్తుంది.
+              తాజా ఈ-పేపర్ సంచిక అందుబాటులో లేదు. సరికొత్త సంచిక అప్‌లోడ్ చేసిన వెంటనే ఆటోమేటిక్‌గా ఇక్కడ కనిపిస్తుంది.
             </p>
             <div className="inline-flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full font-telugu font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>వర్డ్‌ప్రెస్ లైవ్ సింక్ సిద్ధంగా ఉంది (WordPress Live Sync Active)</span>
+              <span>లైవ్ సింక్ సిద్ధంగా ఉంది</span>
             </div>
           </div>
         ) : (
@@ -129,11 +128,6 @@ export default function TodayEditionHero({
             {/* Right Column: Newspaper Edition Details & Direct Reader Action */}
             <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
               <div>
-                {/* Honest Sample Label & Verification Badge */}
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#0f2b5c] text-xs font-semibold mb-4 font-telugu">
-                  <FileCheck2 className="w-3.5 h-3.5 text-blue-600" />
-                  <span>{edition.subtitle}</span>
-                </div>
 
                 {/* Title */}
                 <h1 className="font-telugu-serif text-2xl sm:text-4xl font-bold text-[#0f2b5c] leading-tight mb-3">
@@ -147,18 +141,10 @@ export default function TodayEditionHero({
                 </p>
 
                 {/* Edition Metadata Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-slate-50 border border-slate-200 rounded-md text-xs sm:text-sm font-telugu mb-6">
+                <div className="grid grid-cols-1 gap-3 p-4 bg-slate-50 border border-slate-200 rounded-md text-xs sm:text-sm font-telugu mb-6">
                   <div>
                     <span className="block text-slate-400 text-[11px]">అప్‌లోడ్ తేదీ (Date)</span>
                     <span className="font-semibold text-slate-800">{formattedDate}</span>
-                  </div>
-                  <div>
-                    <span className="block text-slate-400 text-[11px]">ఫైల్ సైజు (PDF Size)</span>
-                    <span className="font-semibold text-slate-800 font-mono">{edition.fileSizeMb || "3.0 MB"}</span>
-                  </div>
-                  <div>
-                    <span className="block text-slate-400 text-[11px]">వర్డ్‌ప్రెస్ మీడియా ID</span>
-                    <span className="font-semibold text-emerald-700 font-mono">{edition.mediaId}</span>
                   </div>
                 </div>
               </div>
@@ -196,10 +182,6 @@ export default function TodayEditionHero({
                 </button>
               </div>
 
-              {/* Honest verification note */}
-              <div className="text-xs text-slate-400 font-telugu flex items-center gap-1.5 pt-1">
-                <span>గమనిక: {edition.note}</span>
-              </div>
             </div>
           </div>
         )}

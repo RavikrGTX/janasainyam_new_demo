@@ -36,14 +36,14 @@ export default function LatestNewsSection({ posts }: LatestNewsSectionProps) {
             </h2>
           </div>
           <span className="text-xs font-mono text-slate-500 bg-white px-2.5 py-1 rounded border border-slate-200">
-            WordPress API Live Feed
+            తాజా వార్తలు లైవ్
           </span>
         </div>
 
         {posts.length === 0 ? (
           <div className="bg-white border border-slate-200 rounded-md p-8 text-center">
             <p className="font-telugu text-slate-600">
-              ప్రస్తుతం వెబ్‌సైట్‌లో ప్రచురితమైన కథనాలు లేవు. WordPress CMS లో కొత్త పోస్ట్‌లను ప్రచురించినప్పుడు అవి ఇక్కడ కనిపిస్తాయి.
+              ప్రస్తుతం వెబ్‌సైట్‌లో ప్రచురితమైన కథనాలు లేవు. కొత్త వార్తలు ప్రచురించినప్పుడు అవి ఇక్కడ కనిపిస్తాయి.
             </p>
           </div>
         ) : (

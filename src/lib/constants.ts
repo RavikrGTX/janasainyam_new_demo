@@ -58,7 +58,7 @@ export const TELUGU_DAYS = [
 ];
 
 export function getFormattedTeluguDate(dateInput?: Date | string | number): string {
-  const date = dateInput ? new Date(dateInput) : new Date(2026, 9, 28);
+  const date = dateInput ? new Date(dateInput) : new Date();
   const dayName = TELUGU_DAYS[date.getDay()];
   const day = date.getDate();
   const monthName = TELUGU_MONTHS[date.getMonth()];

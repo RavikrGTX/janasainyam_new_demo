@@ -72,7 +72,7 @@ export default function SiteFooter() {
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 font-telugu">
           <p>© 2026 జనసైన్యం దినపత్రిక. సర్వహక్కులు ప్రత్యేకించబడ్డాయి.</p>
           <p className="font-mono text-[11px] text-slate-500">
-            Powered by Next.js & WordPress REST API
+            జనసైన్యం డిజిటల్ ఈ-పేపర్
           </p>
         </div>
       </div>

@@ -1,22 +1,15 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Calendar,
-  BookOpen,
-  Menu,
-  X,
-} from "lucide-react";
-import { SITE_CONFIG, NAV_CATEGORIES, getFormattedTeluguDate } from "@/lib/constants";
+import { Calendar, BookOpen } from "lucide-react";
+import { getFormattedTeluguDate } from "@/lib/constants";
 
 interface SiteHeaderProps {
   onOpenReader?: () => void;
 }
 
 export default function SiteHeader({ onOpenReader }: SiteHeaderProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const formattedToday = getFormattedTeluguDate();
 
   return (
@@ -30,10 +23,7 @@ export default function SiteHeader({ onOpenReader }: SiteHeaderProps) {
               <Calendar className="w-3.5 h-3.5 text-blue-300" />
               {formattedToday}
             </span>
-            <span className="hidden sm:inline text-blue-300/60">|</span>
-            <span className="hidden sm:inline text-blue-200 font-telugu">
-              {SITE_CONFIG.editionLocation}
-            </span>
+
           </div>
 
           {/* Right: Quick E-paper link & Actions */}
@@ -72,17 +62,17 @@ export default function SiteHeader({ onOpenReader }: SiteHeaderProps) {
             </Link>
           </div>
 
-          {/* Center/Right: Edition Tagline & Badge */}
+          {/* Center/Right: Logo tagline text */}
           <div className="hidden lg:flex flex-col items-end text-right">
-            <p className="font-telugu-serif text-slate-800 text-sm font-semibold">
-              నిజమైన ప్రజా గళం — విశ్వసనీయ సమాచారం
+            <p className="text-xs text-slate-500 uppercase tracking-widest font-medium">
+              ప్రజల పక్షం
             </p>
-            <p className="text-xs text-slate-500 font-mono mt-0.5">
-              TELUGU DAILY & DIGITAL E-PAPER
+            <p className="font-telugu-serif text-[#c9182b] text-xl font-bold leading-tight">
+              జనసైన్యం
             </p>
           </div>
 
-          {/* Mobile Hamburger Button */}
+          {/* Mobile: E-paper button only */}
           <div className="flex items-center gap-2 md:hidden">
             <button
               onClick={onOpenReader}
@@ -91,83 +81,9 @@ export default function SiteHeader({ onOpenReader }: SiteHeaderProps) {
               <BookOpen className="w-4 h-4" />
               <span>ఈ-పేపర్</span>
             </button>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-md text-slate-700 hover:bg-slate-100 transition"
-              aria-label="Toggle navigation menu"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
           </div>
         </div>
       </div>
-
-      {/* 3. Telugu Navigation Menu */}
-      <nav className="bg-slate-100/80 border-t border-slate-200 hidden md:block">
-        <div className="editorial-container">
-          <ul className="flex items-center gap-1 overflow-x-auto py-1 scrollbar-none text-sm font-medium">
-            {NAV_CATEGORIES.map((cat, idx) => (
-              <li key={cat.id}>
-                {cat.id === "epaper" ? (
-                  <button
-                    onClick={onOpenReader}
-                    className="px-3.5 py-1.5 rounded text-[#0f2b5c] font-bold hover:bg-blue-100/70 font-telugu flex items-center gap-1.5 transition cursor-pointer"
-                  >
-                    <BookOpen className="w-4 h-4 text-[#c9182b]" />
-                    <span>{cat.nameTelugu}</span>
-                  </button>
-                ) : (
-                  <Link
-                    href={cat.href}
-                    className={`px-3.5 py-1.5 rounded transition font-telugu inline-block whitespace-nowrap ${
-                      idx === 0
-                        ? "text-[#0f2b5c] font-bold bg-white shadow-2xs"
-                        : "text-slate-700 hover:text-[#0f2b5c] hover:bg-white/80"
-                    }`}
-                  >
-                    {cat.nameTelugu}
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </nav>
-
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-slate-200 px-4 py-3 space-y-2 animate-in fade-in">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-            వార్తా విభాగాలు (Categories)
-          </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            {NAV_CATEGORIES.map((cat) => (
-              <div key={cat.id}>
-                {cat.id === "epaper" ? (
-                  <button
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      onOpenReader?.();
-                    }}
-                    className="w-full text-left px-3 py-2 rounded bg-blue-50 text-[#0f2b5c] font-bold font-telugu text-sm flex items-center gap-2"
-                  >
-                    <BookOpen className="w-4 h-4 text-[#c9182b]" />
-                    <span>{cat.nameTelugu}</span>
-                  </button>
-                ) : (
-                  <Link
-                    href={cat.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-2 rounded text-slate-700 hover:bg-slate-50 font-telugu text-sm"
-                  >
-                    {cat.nameTelugu}
-                  </Link>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </header>
   );
 }

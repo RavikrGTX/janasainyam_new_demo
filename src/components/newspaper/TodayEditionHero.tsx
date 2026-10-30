@@ -150,36 +150,43 @@ export default function TodayEditionHero({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                {/* Primary Read E-Paper Button */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 pt-2 w-full">
+                {/* Primary Read Button */}
                 <button
                   onClick={onOpenReader}
-                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-[#0f2b5c] hover:bg-[#193661] text-white rounded-md font-telugu font-bold text-base transition shadow-sm hover:shadow cursor-pointer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#0f2b5c] hover:bg-[#193661] active:bg-[#081733] text-white rounded-md font-telugu font-bold text-base transition shadow-sm hover:shadow cursor-pointer"
                 >
-                  <BookOpen className="w-5 h-5 text-yellow-400" />
-                  <span>ఈ-పేపర్ చదవండి (Read E-Paper)</span>
+                  <BookOpen className="w-5 h-5 text-yellow-400 shrink-0" />
+                  <span>చదవండి</span>
                 </button>
 
-                {/* Direct PDF Download */}
-                <a
-                  href={edition.pdfUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  download={edition.filename}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-md font-telugu text-sm font-semibold transition cursor-pointer"
-                >
-                  <Download className="w-4 h-4 text-slate-600" />
-                  <span>డౌన్‌లోడ్ PDF</span>
-                </a>
+                {/* Secondary Actions Grid */}
+                <div className="grid grid-cols-2 sm:flex sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+                  {/* Direct PDF Download */}
+                  <a
+                    href={edition.pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download={edition.filename}
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-md font-telugu text-sm font-semibold transition cursor-pointer"
+                  >
+                    <Download className="w-4 h-4 text-slate-600 shrink-0" />
+                    <span>డౌన్‌లోడ్ PDF</span>
+                  </a>
 
-                {/* Share button */}
-                <button
-                  onClick={handleShare}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-3.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-md font-telugu text-sm font-semibold transition cursor-pointer"
-                >
-                  {copied ? <CheckCircle className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4 text-slate-600" />}
-                  <span>{copied ? "లింక్ కాపీ అయింది" : "షేర్"}</span>
-                </button>
+                  {/* Share button */}
+                  <button
+                    onClick={handleShare}
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-3.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-md font-telugu text-sm font-semibold transition cursor-pointer"
+                  >
+                    {copied ? (
+                      <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                    ) : (
+                      <Share2 className="w-4 h-4 text-slate-600 shrink-0" />
+                    )}
+                    <span>{copied ? "లింక్ కాపీ అయింది" : "షేర్"}</span>
+                  </button>
+                </div>
               </div>
 
             </div>

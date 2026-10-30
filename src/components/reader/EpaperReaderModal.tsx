@@ -562,7 +562,7 @@ export default function EpaperReaderModal({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-50 bg-slate-950 flex flex-col h-screen w-screen overflow-hidden text-white select-none"
+      className="fixed inset-0 z-50 bg-slate-950 flex flex-col h-[100dvh] w-screen overflow-hidden text-white select-none"
     >
       {/* 1. Reader Master Top Toolbar */}
       <div className="bg-[#0f2b5c] border-b border-[#1b3d7d] px-2.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 shrink-0 shadow-md z-30">
@@ -800,7 +800,7 @@ export default function EpaperReaderModal({
           onTouchStart={handleViewportTouchStart}
           onTouchMove={handleViewportTouchMove}
           onTouchEnd={handleViewportTouchEnd}
-          className={`flex-1 overflow-auto bg-slate-900 px-3 py-3 sm:p-8 flex flex-col items-center justify-start overscroll-contain transition-colors ${
+          className={`flex-1 overflow-auto bg-slate-900 px-3 pt-3 pb-28 md:pb-8 sm:p-8 flex flex-col items-center justify-start overscroll-contain transition-colors ${
             toolMode === "pan"
               ? isPanning
                 ? "cursor-grabbing"
@@ -863,8 +863,11 @@ export default function EpaperReaderModal({
         </div>
       </div>
 
-      {/* 3. Mobile Touch Reading & Quick Navigation Bar (Taller & Rounded Buttons) */}
-      <div className="md:hidden bg-[#0a1c3d] border-t border-[#1b3d7d] px-3.5 py-3.5 sm:py-4 flex items-center justify-between text-xs z-30 shrink-0 shadow-2xl">
+      {/* 3. Mobile Touch Reading & Quick Navigation Bar (Strictly Fixed to Bottom & Safe Area Padding) */}
+      <div
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0a1c3d]/98 backdrop-blur-md border-t-2 border-[#1b3d7d] px-3.5 pt-3 flex items-center justify-between text-xs z-50 shadow-[0_-10px_35px_rgba(0,0,0,0.85)] min-h-[74px]"
+        style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 24px))" }}
+      >
         {/* Left: Page Flip Controls with Rounded Buttons */}
         <div className="flex items-center gap-1.5">
           <button

@@ -114,6 +114,21 @@ export default function EpaperReaderModal({
           setPdfDoc(doc);
           setNumPages(doc.numPages);
           setCurrentPage(1);
+
+          // Calculate default fit scale so each page fits screen width automatically with border margin
+          try {
+            const pageOne = await doc.getPage(1);
+            const naturalViewport = pageOne.getViewport({ scale: 1.0 });
+            const screenW = typeof window !== "undefined"
+              ? (viewportWrapperRef.current?.clientWidth || window.innerWidth) - (window.innerWidth < 640 ? 32 : 48)
+              : 540;
+            const autoFitScale = Math.min(Math.max(screenW / naturalViewport.width, 0.35), 2.2);
+            setScale(parseFloat(autoFitScale.toFixed(2)));
+          } catch {
+            const screenW = typeof window !== "undefined" ? window.innerWidth - 32 : 540;
+            setScale(parseFloat(Math.max(screenW / 600, 0.45).toFixed(2)));
+          }
+
           setLoading(false);
         }
       } catch (err: unknown) {
@@ -136,13 +151,25 @@ export default function EpaperReaderModal({
     };
   }, [isOpen, pdfUrl]);
 
-  // Page navigation callbacks
+  // Page navigation callbacks - with scroll reset to top
   const goToPrevPage = useCallback(() => {
-    setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
+    setCurrentPage((prev) => {
+      const next = prev > 1 ? prev - 1 : prev;
+      if (viewportWrapperRef.current) {
+        viewportWrapperRef.current.scrollTop = 0;
+      }
+      return next;
+    });
   }, []);
 
   const goToNextPage = useCallback(() => {
-    setCurrentPage((prev) => (prev < numPages ? prev + 1 : prev));
+    setCurrentPage((prev) => {
+      const next = prev < numPages ? prev + 1 : prev;
+      if (viewportWrapperRef.current) {
+        viewportWrapperRef.current.scrollTop = 0;
+      }
+      return next;
+    });
   }, [numPages]);
 
   // Keyboard navigation
@@ -236,15 +263,25 @@ export default function EpaperReaderModal({
     setScale((prev) => Math.max(prev - 0.25, 0.6));
   };
 
-  // Fit to screen width for natural column scrolling
-  const fitToWidth = () => {
-    if (viewportWrapperRef.current) {
-      const containerWidth = viewportWrapperRef.current.clientWidth - 48;
-      // standard document width ~600px at scale 1.0
-      const calculatedScale = Math.max(containerWidth / 620, 0.7);
-      setScale(calculatedScale);
+  // Fit to screen width for natural column scrolling and complete page fit with border margin
+  const fitToWidth = useCallback(async () => {
+    if (!viewportWrapperRef.current) return;
+    const padding = typeof window !== "undefined" && window.innerWidth < 640 ? 32 : 48;
+    const containerWidth = viewportWrapperRef.current.clientWidth - padding;
+    if (pdfDoc) {
+      try {
+        const page = await pdfDoc.getPage(currentPage);
+        const naturalViewport = page.getViewport({ scale: 1.0 });
+        const autoScale = Math.min(Math.max(containerWidth / naturalViewport.width, 0.35), 2.5);
+        setScale(parseFloat(autoScale.toFixed(2)));
+        return;
+      } catch {
+        // fallback
+      }
     }
-  };
+    const calculatedScale = Math.max(containerWidth / 600, 0.45);
+    setScale(parseFloat(calculatedScale.toFixed(2)));
+  }, [pdfDoc, currentPage]);
 
   // Fit whole page to viewport height
   const fitToPage = () => {
@@ -533,7 +570,7 @@ export default function EpaperReaderModal({
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             onClick={onClose}
-            className="flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/20 text-white rounded text-xs sm:text-sm font-medium transition cursor-pointer shrink-0"
+            className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white rounded-full text-xs sm:text-sm font-medium transition cursor-pointer shrink-0"
             title="హోమ్‌కి తిరిగి వెళ్ళండి (Back to Home)"
           >
             <X className="w-4 h-4" />
@@ -594,7 +631,7 @@ export default function EpaperReaderModal({
           {/* CROP TOOL TOGGLE BUTTON - ICON ONLY (no text) */}
           <button
             onClick={() => setToolMode(toolMode === "clip" ? "pan" : "clip")}
-            className={`p-2 sm:px-2.5 sm:py-1.5 rounded flex items-center justify-center transition cursor-pointer ${
+            className={`w-9 h-9 sm:w-auto sm:h-auto sm:px-2.5 sm:py-1.5 rounded-full flex items-center justify-center transition cursor-pointer ${
               toolMode === "clip"
                 ? "bg-[#c9182b] text-white ring-2 ring-yellow-400 shadow-md animate-pulse"
                 : "bg-white/10 hover:bg-white/20 text-yellow-300 hover:text-yellow-200"
@@ -658,7 +695,7 @@ export default function EpaperReaderModal({
             target="_blank"
             rel="noopener noreferrer"
             download="janasainyam-epaper.pdf"
-            className="p-2 sm:px-2.5 sm:py-1.5 rounded bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-medium flex items-center justify-center gap-1 transition cursor-pointer"
+            className="w-9 h-9 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 rounded-full bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-medium flex items-center justify-center gap-1 transition cursor-pointer"
             title="పూర్తి ఈ-పేపర్ పిడిఎఫ్ డౌన్‌లోడ్ చేయండి"
           >
             <Download className="w-4 h-4" />
@@ -668,7 +705,7 @@ export default function EpaperReaderModal({
           {/* Share */}
           <button
             onClick={handleShare}
-            className="p-2 sm:px-2.5 sm:py-1.5 rounded bg-white/10 hover:bg-white/20 text-white text-xs font-medium flex items-center justify-center gap-1 transition cursor-pointer"
+            className="w-9 h-9 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium flex items-center justify-center gap-1 transition cursor-pointer"
             title="షేర్ చేయండి"
           >
             {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
@@ -680,7 +717,7 @@ export default function EpaperReaderModal({
           {/* Full Screen (Desktop) */}
           <button
             onClick={toggleFullScreen}
-            className="p-1.5 hover:bg-white/20 rounded transition cursor-pointer hidden sm:block"
+            className="w-9 h-9 rounded-full hover:bg-white/20 transition cursor-pointer hidden sm:flex items-center justify-center"
             title="ఫుల్‌స్క్రీన్"
           >
             {isFullScreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -731,24 +768,26 @@ export default function EpaperReaderModal({
           </aside>
         )}
 
-        {/* Floating Quick Page Flip Chevrons (Desktop & Tablet) */}
+        {/* Floating Quick Page Flip Chevrons (Mobile & Desktop) */}
         {currentPage > 1 && (
           <button
             onClick={goToPrevPage}
-            className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-black/60 hover:bg-[#0f2b5c] text-white shadow-xl transition backdrop-blur-xs hidden md:flex items-center justify-center"
-            title="మునుపటి పేజీ"
+            className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 z-20 w-7 h-12 sm:w-12 sm:h-12 rounded-r-2xl sm:rounded-full bg-black/50 hover:bg-[#0f2b5c] text-white shadow-xl transition backdrop-blur-xs flex items-center justify-center cursor-pointer border border-white/10 border-l-0 sm:border-l active:scale-95 opacity-75 hover:opacity-100"
+            title="మునుపటి పేజీ (Previous)"
+            aria-label="Previous Page"
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
           </button>
         )}
 
         {currentPage < numPages && (
           <button
             onClick={goToNextPage}
-            className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-black/60 hover:bg-[#0f2b5c] text-white shadow-xl transition backdrop-blur-xs hidden md:flex items-center justify-center"
-            title="తరువాతి పేజీ"
+            className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 z-20 w-7 h-12 sm:w-12 sm:h-12 rounded-l-2xl sm:rounded-full bg-black/50 hover:bg-[#0f2b5c] text-white shadow-xl transition backdrop-blur-xs flex items-center justify-center cursor-pointer border border-white/10 border-r-0 sm:border-r active:scale-95 opacity-75 hover:opacity-100"
+            title="తరువాతి పేజీ (Next)"
+            aria-label="Next Page"
           >
-            <ChevronRight className="w-6 h-6" />
+            <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
           </button>
         )}
 
@@ -761,7 +800,7 @@ export default function EpaperReaderModal({
           onTouchStart={handleViewportTouchStart}
           onTouchMove={handleViewportTouchMove}
           onTouchEnd={handleViewportTouchEnd}
-          className={`flex-1 overflow-auto bg-slate-900 p-2 sm:p-8 flex flex-col items-center justify-start overscroll-contain transition-colors ${
+          className={`flex-1 overflow-auto bg-slate-900 px-3 py-3 sm:p-8 flex flex-col items-center justify-start overscroll-contain transition-colors ${
             toolMode === "pan"
               ? isPanning
                 ? "cursor-grabbing"
@@ -797,7 +836,7 @@ export default function EpaperReaderModal({
             </div>
           ) : (
             <div
-              className="relative shadow-2xl border border-slate-700 rounded-xs bg-white my-auto max-w-none transition-shadow"
+              className="relative shadow-[0_12px_40px_rgba(0,0,0,0.65)] border-2 sm:border-4 border-slate-300 dark:border-slate-400 rounded-xs bg-white my-auto max-w-full transition-shadow ring-1 ring-black/20"
               onMouseDown={handleClipMouseDown}
               onMouseMove={handleClipMouseMove}
               onMouseUp={handleClipMouseUp}
@@ -824,69 +863,71 @@ export default function EpaperReaderModal({
         </div>
       </div>
 
-      {/* 3. Mobile Touch Reading & Quick Navigation Bar (md:hidden) */}
-      <div className="md:hidden bg-[#0f2b5c] border-t border-[#1b3d7d] px-3 py-2 flex items-center justify-between text-xs z-30 shrink-0 shadow-lg">
-        {/* Page Nav */}
-        <div className="flex items-center gap-1">
+      {/* 3. Mobile Touch Reading & Quick Navigation Bar (Taller & Rounded Buttons) */}
+      <div className="md:hidden bg-[#0a1c3d] border-t border-[#1b3d7d] px-3.5 py-3.5 sm:py-4 flex items-center justify-between text-xs z-30 shrink-0 shadow-2xl">
+        {/* Left: Page Flip Controls with Rounded Buttons */}
+        <div className="flex items-center gap-1.5">
           <button
             onClick={goToPrevPage}
             disabled={currentPage <= 1}
-            className="p-2 bg-white/10 active:bg-white/20 rounded disabled:opacity-25 transition cursor-pointer"
-            title="మునుపటి పేజీ"
+            className="w-10 h-10 rounded-full bg-white/10 active:bg-white/20 disabled:opacity-20 disabled:pointer-events-none transition cursor-pointer flex items-center justify-center border border-white/15 shadow-xs"
+            title="మునుపటి పేజీ (Previous)"
+            aria-label="Previous Page"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-5 h-5" />
           </button>
 
-          <span className="font-telugu font-bold text-blue-100 text-xs px-2">
+          <span className="font-mono font-bold text-blue-100 text-xs px-3 h-10 rounded-full bg-black/40 border border-white/15 flex items-center justify-center shadow-inner min-w-[56px]">
             {currentPage} / {numPages || 1}
           </span>
 
           <button
             onClick={goToNextPage}
             disabled={currentPage >= numPages}
-            className="p-2 bg-white/10 active:bg-white/20 rounded disabled:opacity-25 transition cursor-pointer"
-            title="తరువాతి పేజీ"
+            className="w-10 h-10 rounded-full bg-white/10 active:bg-white/20 disabled:opacity-20 disabled:pointer-events-none transition cursor-pointer flex items-center justify-center border border-white/15 shadow-xs"
+            title="తరువాతి పేజీ (Next)"
+            aria-label="Next Page"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Zoom Controls & Crop Tool Toggle (ICON ONLY) */}
+        {/* Right: Zoom Controls & Crop Tool (All Rounded Buttons) */}
         <div className="flex items-center gap-1.5">
-          {/* Zoom Out */}
+          {/* Zoom Out Button */}
           <button
             onClick={zoomOut}
-            className="p-2 bg-white/10 active:bg-white/20 rounded transition cursor-pointer"
+            className="w-10 h-10 rounded-full bg-white/10 active:bg-white/20 transition cursor-pointer flex items-center justify-center border border-white/15 shadow-xs text-slate-200 active:text-white"
             title="జూమ్ తగ్గించు (Zoom Out)"
+            aria-label="Zoom Out"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
 
-          {/* Fit Width */}
+          {/* Fit Button */}
           <button
             onClick={fitToWidth}
-            className="px-2.5 py-1.5 bg-white/10 active:bg-white/20 rounded font-telugu text-[11px] font-semibold transition cursor-pointer"
-            title="వెడల్పుకు సరిపోల్చు (Fit Width)"
+            className="px-3.5 h-10 rounded-full bg-white/10 active:bg-white/20 font-bold text-xs text-blue-100 transition cursor-pointer flex items-center justify-center border border-white/15 shadow-xs active:scale-95"
+            title="స్క్రీన్‌కు సరిపోల్చు (Fit Width)"
+            aria-label="Fit Page"
           >
             Fit
           </button>
 
-          {/* Zoom In */}
+          {/* Zoom In Button */}
           <button
             onClick={zoomIn}
-            className="p-2 bg-white/10 active:bg-white/20 rounded transition cursor-pointer"
+            className="w-10 h-10 rounded-full bg-white/10 active:bg-white/20 transition cursor-pointer flex items-center justify-center border border-white/15 shadow-xs text-slate-200 active:text-white"
             title="జూమ్ పెంచు (Zoom In)"
+            aria-label="Zoom In"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
 
-          {/* Divider */}
-          <span className="w-px h-5 bg-white/20 mx-0.5" />
-
-          {/* Crop Tool Toggle - ICON ONLY! No text! */}
+          {/* Crop Tool Toggle - Rounded (Icon only!) */}
           <button
             onClick={() => setToolMode(toolMode === "clip" ? "pan" : "clip")}
-            className={`p-2 rounded transition cursor-pointer flex items-center justify-center ${
+            className={`w-10 h-10 rounded-full transition cursor-pointer flex items-center justify-center border border-white/15 shadow-xs ${
               toolMode === "clip"
                 ? "bg-[#c9182b] text-white ring-2 ring-yellow-400 shadow-md animate-pulse"
                 : "bg-white/10 active:bg-white/20 text-yellow-300"

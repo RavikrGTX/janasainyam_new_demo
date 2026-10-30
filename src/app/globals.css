@@ -1,26 +1,85 @@
 @import "tailwindcss";
 
+@theme {
+  --color-newspaper-50: #f0f4fa;
+  --color-newspaper-100: #e2eaf4;
+  --color-newspaper-200: #c6d5e9;
+  --color-newspaper-300: #9cb8da;
+  --color-newspaper-400: #6a94c6;
+  --color-newspaper-500: #4272ae;
+  --color-newspaper-600: #295593;
+  --color-newspaper-700: #1f4277;
+  --color-newspaper-800: #193661;
+  --color-newspaper-900: #0f2b5c;
+  --color-newspaper-950: #081733;
+
+  --color-editorial-red: #c9182b;
+  --color-editorial-red-dark: #990f1d;
+  --color-editorial-border: #e2e8f0;
+  --color-editorial-surface: #f8fafc;
+  --color-editorial-muted: #64748b;
+
+  --font-telugu: var(--font-telugu-sans), "Noto Sans Telugu", system-ui, -apple-system, sans-serif;
+  --font-telugu-serif: var(--font-telugu-serif), "Noto Serif Telugu", Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --newspaper-blue: #0f2b5c;
+  --newspaper-blue-dark: #081733;
+  --newspaper-blue-light: #1f4277;
+  --newspaper-red: #c9182b;
+  --newspaper-bg: #ffffff;
+  --newspaper-surface: #f8fafc;
+  --newspaper-border: #e2e8f0;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Ensure Telugu typography has comfortable line height for conjunct glyphs */
+.font-telugu {
+  font-family: var(--font-telugu);
+  line-height: 1.65;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.font-telugu-serif {
+  font-family: var(--font-telugu-serif);
+  line-height: 1.65;
+}
+
+/* Editorial newspaper specific helpers */
+.editorial-container {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .editorial-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (min-width: 1024px) {
+  .editorial-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Editorial rule lines */
+.editorial-divider {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.editorial-divider-thick {
+  border-bottom: 2px solid #0f2b5c;
+}
+
+.editorial-divider-double {
+  border-top: 1px solid #0f2b5c;
+  border-bottom: 3px solid #0f2b5c;
+  height: 6px;
 }
